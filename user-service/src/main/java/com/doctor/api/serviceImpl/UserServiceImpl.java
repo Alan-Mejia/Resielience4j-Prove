@@ -4,14 +4,14 @@ package com.doctor.api.serviceImpl;
 import com.doctor.api.dtos.GenericMapperDTO;
 import com.doctor.api.dtos.SimpleUserDTO;
 import com.doctor.api.exception.ResourceNotFoundException;
+import com.doctor.api.feignClients.DoctorFeignClietn;
+import com.doctor.api.feignModels.Doctor;
 import com.doctor.api.models.User;
 import com.doctor.api.respository.GenericRepository;
 import com.doctor.api.respository.UserRepository;
 import com.doctor.api.service.UserService;
-import com.doctor.api.serviceImpl.GenericServiceImpl;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +19,7 @@ import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -27,6 +28,9 @@ public class UserServiceImpl extends GenericServiceImpl<User,Long> implements Us
     private UserRepository userRepository;
 
     static GenericMapperDTO genericMapperDTO = GenericMapperDTO.singleInstance();
+
+    @Autowired
+    private DoctorFeignClietn doctorFeignClietn;
 
     public UserServiceImpl(GenericRepository<User, Long> genericRepository) {
         super(genericRepository);
@@ -83,5 +87,24 @@ public class UserServiceImpl extends GenericServiceImpl<User,Long> implements Us
         existingUser.setStatus(2);
         return CompletableFuture.completedFuture(true);
     }
+
+    @Async("asyncExecutor")
+    @Transactional
+    public CompletableFuture<Doctor> creteUserDoctorProfile(Doctor doctor, Long id){
+        Optional<User> existingUser = userRepository.findById(id);
+        if(existingUser == null){
+            Doctor doctor1 = null;
+            return CompletableFuture.completedFuture(doctor1);
+        }
+
+        doctor.setFee(doctor.getFee());
+        doctor.setShiftId(doctor.getShiftId());
+        doctor.setSpecialtyId(doctor.getSpecialtyId());
+        doctor.setStatus(1);
+        doctor.setUserId(existingUser.get().getId());
+        return CompletableFuture.completedFuture(doctorFeignClietn.save(doctor));
+
+    }
+
 
 }

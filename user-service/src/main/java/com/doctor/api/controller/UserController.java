@@ -1,6 +1,7 @@
 package com.doctor.api.controller;
 
 import com.doctor.api.dtos.SimpleUserDTO;
+import com.doctor.api.feignModels.Doctor;
 import com.doctor.api.models.User;
 import com.doctor.api.serviceImpl.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.print.Doc;
 import javax.validation.Valid;
 import java.util.Date;
 import java.util.List;
@@ -56,6 +58,11 @@ public class UserController extends GenericControllerImpl<User,UserServiceImpl> 
     @DeleteMapping("/{id}")
     public CompletableFuture<ResponseEntity> delete(@PathVariable("id")Long id){
         return userService.deleteUser(id).thenApply(ResponseEntity::ok);
+    }
+
+    @PostMapping("/role/doctor/{userId}")
+    public CompletableFuture<ResponseEntity> createDoctorProfileFromUser(@RequestBody Doctor doctor, @PathVariable("userId") Long userId){
+        return CompletableFuture.completedFuture(userService.creteUserDoctorProfile(doctor,userId)).thenApply(ResponseEntity::ok);
     }
 
 }
